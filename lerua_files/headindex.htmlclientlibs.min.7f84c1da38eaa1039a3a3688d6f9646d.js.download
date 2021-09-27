@@ -1,0 +1,61 @@
+let isLaunched = false;
+const bannerName = "maxipro-servis-dlya-profi";
+const cookieName = "maxipro_banners";
+
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+}
+
+function isExperimentRunning(cookie) {
+  var experiments = JSON.parse(
+    document.querySelector(".experiments-info")?.dataset.experiments
+  );
+  var isRunning = false;
+  experiments.forEach((experiment) => {
+    if (experiment.experimentLocalId === cookie) {
+      isRunning = true;
+    }
+  });
+  return isRunning;
+}
+
+function bannerEvent() {
+  const banner = document
+    .querySelectorAll(".root-banner")[1]
+    .querySelector(".custom-banner");
+
+  const bannerCasual = document
+    .querySelectorAll(".root-banner")[0]
+    .querySelector(".custom-banner");
+  const isBannerMaxipro = banner.dataset.bannerCreative === bannerName;
+  if (!banner || !bannerCasual) {
+    setTimeout(() => bannerEvent(), 100);
+  } else {
+    banner.style = "display:none";
+    bannerCasual.style = "display:none";
+    if (isLaunched || !isBannerMaxipro) return;
+    let maxiproCookie = getCookie(cookieName);
+    let isRunning = isExperimentRunning(cookieName);
+    if (maxiproCookie && isRunning) {
+      dataLayer.push({
+        event: "Maxipro",
+        eventAction: "personalization",
+        eventCategory: "Non-Interactions",
+        eventLabel: maxiproCookie,
+      });
+    }
+    if (maxiproCookie === "0" || !maxiproCookie || !isRunning) {
+      bannerCasual.style = "display:block";
+    } else {
+      banner.style = "display:block";
+    }
+
+    isLaunched = true;
+  }
+}
+bannerEvent();
+document.addEventListener("load", bannerEvent);
+
+

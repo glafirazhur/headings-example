@@ -1,0 +1,65 @@
+$(document).ready(function () {
+    checkListHeight(false);
+    $(window).resize(checkListHeight);
+    $('.section-card li.last').click(function () {
+        var $this = $(this),
+            opened = $this.hasClass('opened');
+        $this.parents('.items-border').css('height', 'auto');
+        $this.parent('ul').find('.additional').slideToggle({
+            progress: function () {
+                checkListHeight(true);
+            },
+            done: function() {
+                $this.find('.section-card-toggle-sign').text( opened ? '+' : '-');
+                $this.toggleClass('opened', !opened);
+            }
+        });
+    });
+
+    function splitTo(arr, n) {
+        return _.toArray(arr).reduce(function( p, c, i, a) {
+          if (i%n === 0) p.push([]);
+          p[p.length-1][i] = c;
+          return p;
+        }, []);
+    }
+
+    function checkListHeight(resetHeight) {
+        if (resetHeight) {
+            $('.items-border').css('height', 'auto');
+        }
+
+        if (bootstrapGridCheck.isXs()) {
+            return;
+        }
+
+        var $sectionCards = $('.section-card'),
+            itemCount = bootstrapGridCheck.isSm() ? 2 : 3,
+            $sectionCardsSplit = splitTo($sectionCards, itemCount),
+            maxBorderHeight, maxAltNodeHeight, currentAltNodeHeights, borderObjs, height;
+        $sectionCardsSplit.forEach(function(arr) {
+            maxBorderHeight = 0;
+            maxAltNodeHeight = 0;
+            currentAltNodeHeights = [];
+            borderObjs = [];
+            arr.forEach(function(card) {
+                var borderObj = card.querySelector('.items-border'),
+                    borderHeight = borderObj.offsetHeight,
+                    additionalBlock = card.querySelector('.additional-help__wrapper'),
+                    altNodeHeight = _.isEmpty(additionalBlock)? 0 : additionalBlock.offsetHeight;
+                borderObjs.push(borderObj);
+                currentAltNodeHeights.push(altNodeHeight);
+                if (borderHeight > maxBorderHeight) {
+                    maxBorderHeight = borderHeight;
+                }
+                if (altNodeHeight > maxAltNodeHeight) {
+                    maxAltNodeHeight = altNodeHeight;
+                }
+            });
+            height = maxBorderHeight + maxAltNodeHeight;
+            for (var i = 0; i < borderObjs.length; i++) {
+                borderObjs[i].style.height = (height - currentAltNodeHeights[i]) + 'px';
+            }
+        });
+    }
+});
